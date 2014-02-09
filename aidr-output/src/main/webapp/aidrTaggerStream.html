@@ -1,0 +1,93 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <link rel="shortcut icon" type="image/ico" href="media/images/aidrIco.ico" />
+
+    <title>AIDR: Artificial Intelligence for Disaster Response</title>
+
+    <style type="text/css">
+        @import "media/css/main.css";
+        @import "media/css/screen.css";
+    </style>
+    <script type="text/javascript" language="javascript" src="media/js/jquery.js"></script>
+    <script src="media/js/purl.js"></script>
+    <script type="text/javascript" charset="utf-8">
+        $(document).ready(function() {
+            var searchKey = $.url().param('crisisCode');
+            searchKey = "dolphins_slaughter";
+            if(searchKey !="" && typeof searchKey != 'undefined'){
+                //var url = 'http://localhost:8080/AIDROutput/crisis/stream/channel?crisisCode='+ searchKey+'&rate=60';
+                //var url = "http://localhost:8080/predict-ui/tester.php";
+                var url = "http://localhost:8080/AIDROutput/crisis/stream/channel?crisisCode=dolphins_slaughter&rate=100&duration=10m";
+                var xhReq = new XMLHttpRequest();
+                xhReq.open("GET", url, true);
+                xhReq.send(null);
+                var pollTimer = setInterval(pollLatestResponse, 5000);
+
+
+                function pollLatestResponse() {
+                    var allMessages = xhReq.responseText;
+                    console.log("allMessages : " + allMessages);
+                    var nextReadPos = 0;
+                    var index = 0;
+                    do {
+                        var unprocessed = allMessages.substring(nextReadPos);
+                        console.log("unprocessed : " + unprocessed);
+                        var messageXMLEndIndex = unprocessed.indexOf("}]");
+                        if (messageXMLEndIndex!=-1) {
+                            var endOfFirstMessageIndex = messageXMLEndIndex + "}]".length;
+                            var anUpdate = unprocessed.substring(0, endOfFirstMessageIndex);
+                            console.log("anUpdate : " + anUpdate);
+
+                            var obj = $.parseJSON( anUpdate );
+
+                            var result = [];
+
+                            for(var i in obj)
+                                result.push([i, obj [i]]);
+
+                            console.log(result);
+
+                            $("#tweetList").append($("<li class='ui-widget-content'></li>").html(anUpdate));
+                         //   $("#tweetList").fadeIn( "slow" );
+                            $("#tweetList").animate({ scrollTop: $('#tweetList')[0].scrollHeight}, 1000);
+                            nextReadPos += endOfFirstMessageIndex;
+                            index++;
+
+                        }
+                    } while (messageXMLEndIndex != -1);
+                }
+
+            }
+        });
+    </script>
+</head>
+<body id="mainBody">
+<div id="headerwrapper">
+    <div id="header">
+        <img id="headeraidrlogo" src="media/images/aidr_logo_240x90.png">&nbsp;
+    </div>
+</div>
+
+<div id="mainwrapper">
+    <div id="main">
+        <div id="sidebar">
+            <ol id="tweetList"></ol>
+        </div>
+    </div>
+</div>
+
+
+<div id="footerwrapper"><div id="footer">
+    <div style="float: right;">
+        <a style="text-decoration: none;" href="http://www.qcri.qa/">A project by <img align="middle" id="footerqcrilogo" src="media/images/qcri-gray-horiz.png"/></a>
+    </div>
+    <div style="float: left; padding-top: 16px;">
+        <a style="text-decoration: underline;" href="tos/">Terms of Service</a>
+    </div>
+</div></div>
+
+
+</body>
+</html>
